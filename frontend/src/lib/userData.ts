@@ -3,10 +3,14 @@ import { getSupabase } from "./supabase";
 import {
   loadFavourites as loadLocalFavourites,
   loadUserPantry as loadLocalPantry,
+  loadGroceryCategories as loadLocalGrocery,
   saveFavourite as saveLocalFavourite,
   saveUserPantry as saveLocalPantry,
+  saveGroceryCategories as saveLocalGrocery,
   removeFavourite as removeLocalFavourite,
   DEFAULT_PANTRY_ITEMS,
+  DEFAULT_GROCERY_CATEGORIES,
+  type GroceryCategory,
 } from "./storage";
 
 export async function fetchUserPantry(
@@ -72,6 +76,67 @@ export async function persistUserPantry(items: string[]) {
       error.message.includes("Could not find") || error.code === "42P01"
         ? "Pantry table missing — run supabase/schema.sql in the Supabase SQL Editor."
         : `Could not sync pantry: ${error.message}`,
+    );
+  }
+}
+
+export async function fetchGroceryList(
+  fallback: GroceryCategory[] = DEFAULT_GROCERY_CATEGORIES,
+): Promise<GroceryCategory[]> {
+  const supabase = getSupabase();
+  const {
+    data: { user },
+  } = (await supabase?.auth.getUser()) || { data: { user: null } };
+
+  if (!supabase || !user) {
+    return loadLocalGrocery(fallback);
+  }
+
+  const { data, error } = await supabase
+    .from("grocery_lists")
+    .select("categories")
+    .eq("user_id", user.id)
+    .maybeSingle();
+
+  if (error || !data) {
+    const local = loadLocalGrocery(fallback);
+    const { error: upsertError } = await supabase.from("grocery_lists").upsert({
+      user_id: user.id,
+      categories: local,
+      updated_at: new Date().toISOString(),
+    });
+    if (upsertError) {
+      console.warn("grocery sync:", upsertError.message);
+    }
+    return local;
+  }
+
+  const categories = Array.isArray(data.categories)
+    ? (data.categories as GroceryCategory[])
+    : [];
+  if (!categories.length) return loadLocalGrocery(fallback);
+  saveLocalGrocery(categories);
+  return loadLocalGrocery();
+}
+
+export async function persistGroceryList(categories: GroceryCategory[]) {
+  saveLocalGrocery(categories);
+  const supabase = getSupabase();
+  const {
+    data: { user },
+  } = (await supabase?.auth.getUser()) || { data: { user: null } };
+  if (!supabase || !user) return;
+
+  const { error } = await supabase.from("grocery_lists").upsert({
+    user_id: user.id,
+    categories,
+    updated_at: new Date().toISOString(),
+  });
+  if (error) {
+    throw new Error(
+      error.message.includes("Could not find") || error.code === "42P01"
+        ? "Grocery table missing — run supabase/schema.sql in the Supabase SQL Editor."
+        : `Could not sync grocery list: ${error.message}`,
     );
   }
 }

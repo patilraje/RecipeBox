@@ -5,10 +5,13 @@ from __future__ import annotations
 from fastapi import APIRouter, HTTPException
 
 from app.ai import AIRecipeGenerator
+from app.grocery import suggest_grocery_items
 from app.matcher import MatchType, contains_excluded, match_recipe
 from app.models import (
     GenerateRequest,
     GenerateResponse,
+    GrocerySuggestRequest,
+    GrocerySuggestResponse,
     NormaliseRequest,
     NormaliseResponse,
     NormalisedIngredientOut,
@@ -103,6 +106,19 @@ async def health() -> dict[str, str]:
 async def pantry_defaults() -> PantryDefaultsResponse:
     data = get_pantry_defaults()
     return PantryDefaultsResponse(**data)
+
+
+@router.post("/grocery/suggest", response_model=GrocerySuggestResponse)
+async def grocery_suggest(body: GrocerySuggestRequest) -> GrocerySuggestResponse:
+    suggestions, provider = await suggest_grocery_items(
+        body.category,
+        existing_items=body.existing_items,
+        count=body.count,
+    )
+    return GrocerySuggestResponse(
+        suggestions=suggestions,
+        provider=provider,  # type: ignore[arg-type]
+    )
 
 
 @router.post("/ingredients/normalize", response_model=NormaliseResponse)

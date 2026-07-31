@@ -2,9 +2,23 @@ import type { RecipeCard } from "./types";
 
 const PANTRY_KEY = "recipebox_pantryItems";
 const PANTRY_LEGACY_KEY = "recipebox_pantrySelections";
+const GROCERY_KEY = "recipebox_groceryCategories";
 const FAV_KEY = "recipebox_savedRecipes";
 const LAST_SEARCH_KEY = "recipebox_lastSearch";
 const LAST_RESULTS_KEY = "recipebox_lastResults";
+
+export type GroceryCategory = {
+  id: string;
+  name: string;
+  items: string[];
+};
+
+export const DEFAULT_GROCERY_CATEGORIES: GroceryCategory[] = [
+  { id: "seeds", name: "Seeds", items: [] },
+  { id: "snacks", name: "Snacks", items: [] },
+  { id: "antioxidants", name: "Antioxidants", items: [] },
+  { id: "produce", name: "Produce", items: [] },
+];
 
 export const DEFAULT_PANTRY_ITEMS = [
   "salt",
@@ -79,6 +93,49 @@ export function loadUserPantry(fallback: string[] = DEFAULT_PANTRY_ITEMS): strin
 export function saveUserPantry(items: string[]) {
   if (!canUseStorage()) return;
   localStorage.setItem(PANTRY_KEY, JSON.stringify(uniqueItems(items)));
+}
+
+function normalizeCategories(raw: unknown): GroceryCategory[] {
+  if (!Array.isArray(raw)) return DEFAULT_GROCERY_CATEGORIES.map((c) => ({ ...c }));
+  const cleaned: GroceryCategory[] = [];
+  for (const entry of raw) {
+    if (!entry || typeof entry !== "object") continue;
+    const row = entry as Partial<GroceryCategory>;
+    const name = typeof row.name === "string" ? row.name.trim() : "";
+    if (!name) continue;
+    const id =
+      typeof row.id === "string" && row.id.trim()
+        ? row.id.trim()
+        : name.toLowerCase().replace(/\s+/g, "-");
+    const items = Array.isArray(row.items)
+      ? uniqueItems(row.items.filter((i): i is string => typeof i === "string"))
+      : [];
+    cleaned.push({ id, name, items });
+  }
+  return cleaned.length
+    ? cleaned
+    : DEFAULT_GROCERY_CATEGORIES.map((c) => ({ ...c }));
+}
+
+export function loadGroceryCategories(
+  fallback: GroceryCategory[] = DEFAULT_GROCERY_CATEGORIES,
+): GroceryCategory[] {
+  if (!canUseStorage()) return fallback.map((c) => ({ ...c, items: [...c.items] }));
+  try {
+    const raw = localStorage.getItem(GROCERY_KEY);
+    if (!raw) return fallback.map((c) => ({ ...c, items: [...c.items] }));
+    return normalizeCategories(JSON.parse(raw));
+  } catch {
+    return fallback.map((c) => ({ ...c, items: [...c.items] }));
+  }
+}
+
+export function saveGroceryCategories(categories: GroceryCategory[]) {
+  if (!canUseStorage()) return;
+  localStorage.setItem(
+    GROCERY_KEY,
+    JSON.stringify(normalizeCategories(categories)),
+  );
 }
 
 export function loadFavourites(): RecipeCard[] {

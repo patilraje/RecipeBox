@@ -55,4 +55,20 @@ export function generateRecipes(payload: {
   });
 }
 
+export type GrocerySuggestResponse = {
+  suggestions: string[];
+  provider: "gemini" | "groq" | "ollama" | "template";
+};
+
+export function suggestGroceryItems(payload: {
+  category: string;
+  existing_items?: string[];
+  count?: number;
+}) {
+  return request<GrocerySuggestResponse>("/api/grocery/suggest", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
 export { API_URL };

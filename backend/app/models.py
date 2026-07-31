@@ -94,3 +94,14 @@ class ValidateResponse(BaseModel):
 class PantryDefaultsResponse(BaseModel):
     basic: list[str]
     optional: list[str]
+
+
+class GrocerySuggestRequest(BaseModel):
+    category: str = Field(min_length=1)
+    existing_items: list[str] = []
+    count: int = Field(default=8, ge=1, le=16)
+
+
+class GrocerySuggestResponse(BaseModel):
+    suggestions: list[str]
+    provider: Literal["gemini", "groq", "ollama", "template"]

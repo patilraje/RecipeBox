@@ -7,6 +7,7 @@ import { useAuth } from "@/components/AuthProvider";
 const links = [
   { href: "/", label: "Find" },
   { href: "/pantry", label: "Pantry" },
+  { href: "/grocery", label: "Grocery" },
   { href: "/results", label: "Results" },
   { href: "/favourites", label: "Saved" },
 ];

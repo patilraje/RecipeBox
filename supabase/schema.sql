@@ -62,3 +62,33 @@ create policy "Users update own recipes"
   on public.saved_recipes for update
   using (auth.uid() = user_id)
   with check (auth.uid() = user_id);
+
+-- Categorized grocery lists
+create table if not exists public.grocery_lists (
+  user_id uuid primary key references auth.users (id) on delete cascade,
+  categories jsonb not null default '[]'::jsonb,
+  updated_at timestamptz not null default now()
+);
+
+alter table public.grocery_lists enable row level security;
+
+drop policy if exists "Users read own grocery" on public.grocery_lists;
+create policy "Users read own grocery"
+  on public.grocery_lists for select
+  using (auth.uid() = user_id);
+
+drop policy if exists "Users insert own grocery" on public.grocery_lists;
+create policy "Users insert own grocery"
+  on public.grocery_lists for insert
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users update own grocery" on public.grocery_lists;
+create policy "Users update own grocery"
+  on public.grocery_lists for update
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+drop policy if exists "Users delete own grocery" on public.grocery_lists;
+create policy "Users delete own grocery"
+  on public.grocery_lists for delete
+  using (auth.uid() = user_id);

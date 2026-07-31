@@ -588,6 +588,58 @@ select {
   margin: 0.75rem 0;
 }
 
+.grocery-category-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.85rem;
+}
+
+.grocery-category-head h3 {
+  margin: 0;
+  font-family: var(--font-display), Georgia, serif;
+  font-size: 1.35rem;
+  letter-spacing: -0.02em;
+}
+
+.grocery-category-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.grocery-category-actions .secondary-button {
+  padding: 0.55rem 0.9rem;
+}
+
+.grocery-suggestions {
+  margin-top: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid var(--line);
+}
+
+.grocery-suggestions .muted {
+  margin-bottom: 0.55rem;
+}
+
+.chip-suggest {
+  background: rgba(232, 163, 23, 0.12);
+  border-color: rgba(232, 163, 23, 0.4);
+  color: #6d4a05;
+}
+
+.chip-suggest:hover {
+  background: rgba(232, 163, 23, 0.22);
+}
+
+.grocery-category-input {
+  flex: 1;
+  min-width: 12rem;
+}
+
 @media (max-width: 640px) {
   .site-nav {
     padding-inline: 1rem;
